@@ -290,8 +290,7 @@ class TestFuture(TestCase):
 
 class AssetFinderTestCase(TestCase):
 
-    @with_environment()
-    def test_lookup_symbol_fuzzy(self, env=None):
+    def test_lookup_symbol_fuzzy(self):
         as_of = pd.Timestamp('2013-01-01', tz='UTC')
         frame = pd.DataFrame.from_records(
             [
