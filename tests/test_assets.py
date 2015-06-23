@@ -591,14 +591,14 @@ class AssetFinderTestCase(TestCase):
     def test_sid_assignment(self):
 
         # This metadata does not contain SIDs
-        metadata = {'PLAY': {'symbol': 'PLAY'},
-                    'MSFT': {'symbol': 'MSFT'}}
+        metadata = {'PLAY': {'symbol': 'PLAY', 'sid': 1},
+                    'MSFT': {'symbol': 'MSFT', 'sid': 2}}
 
         # Build a finder that is allowed to assign sids
         finder = AssetFinder(metadata=metadata, allow_sid_assignment=True)
 
         # Verify that Assets were built
-        play = finder.retrieve_asset_by_identifier('PLAY')
+        play = finder.retrieve_asset(1)
         self.assertEqual('PLAY', play.symbol)
 
     def test_sid_assignment_failure(self):
