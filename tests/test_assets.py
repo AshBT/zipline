@@ -293,7 +293,7 @@ class AssetTestCase(TestCase):
 class TestFuture(TestCase):
     future = Future(
         2468,
-        symbol='OMK15',
+        symbol='OMH15',
         root_symbol='OM',
         notice_date=pd.Timestamp('2014-01-20', tz='UTC'),
         expiration_date=pd.Timestamp('2014-02-20', tz='UTC'),
@@ -302,13 +302,13 @@ class TestFuture(TestCase):
 
     def test_str(self):
         strd = self.future.__str__()
-        self.assertEqual("Future(2468 [OMK15])", strd)
+        self.assertEqual("Future(2468 [OMH15])", strd)
 
     def test_repr(self):
         reprd = self.future.__repr__()
         self.assertTrue("Future" in reprd)
         self.assertTrue("2468" in reprd)
-        self.assertTrue("OMK15" in reprd)
+        self.assertTrue("OMH15" in reprd)
         self.assertTrue(("notice_date=Timestamp('2014-01-20 00:00:00+0000', "
                         "tz='UTC')") in reprd)
         self.assertTrue("expiration_date=Timestamp('2014-02-20 00:00:00+0000'"
@@ -638,7 +638,7 @@ class AssetFinderTestCase(TestCase):
     def test_root_symbol(self):
         metadata = {
             0: {
-                'symbol': 'OMK15',
+                'symbol': 'OMH15',
                 'root_symbol': 'OM',
                 'asset_type': 'future',
                 'notice_date': '2014-01-20',
@@ -648,5 +648,5 @@ class AssetFinderTestCase(TestCase):
         }
 
         finder = AssetFinder(metadata=metadata)
-        omk15 = finder.retrieve_asset(0)
-        self.assertEqual('OM', omk15.root_symbol)
+        omh15 = finder.retrieve_asset(0)
+        self.assertEqual('OM', omh15.root_symbol)
