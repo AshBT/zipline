@@ -253,10 +253,10 @@ class AssetFinder(object):
 
         counter = 0
         for identifier, row in self.metadata_cache.items():
-            self.spawn_asset(identifier=identifier, **row)
+            self._spawn_asset(identifier=identifier, **row)
             counter += 1
 
-    def spawn_asset(self, identifier, **kwargs):
+    def _spawn_asset(self, identifier, **kwargs):
 
         # Check if the sid is declared
         try:
