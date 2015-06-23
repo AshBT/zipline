@@ -75,6 +75,7 @@ class AssetFinder(object):
         # our instance will continue to use the old one.
         self.cache = {}
         self.sym_cache = {}
+        self.future_cache = {}
         self.identifier_cache = {}
         self.fuzzy_match = {}
 
@@ -239,6 +240,66 @@ class AssetFinder(object):
                 else:
                     self.fuzzy_match[(symbol, fuzzy, as_of_date)] = None
 
+    def _sort_future_chains(self):
+        """ Sort by increasing expiration date the list of contracts
+        for each root symbol in the future cache.
+        """
+        exp_key = lambda contract: contract.expiration_date
+
+        for root_symbol in self.future_cache:
+            self.future_cache[root_symbol].sort(key=exp_key)
+
+    def _valid_contracts(self, root_symbol, as_of_date):
+        """ Returns  a list of the currently valid futures contracts
+        for a given root symbol, sorted by expiration date (the
+        contracts are sorted when the AssetFinder is built).
+        """
+        try:
+            return [c for c in self.future_cache[root_symbol]
+                    if c.expiration_date > as_of_date]
+        except KeyError:
+            return None
+
+    def _resolve_contracts(self, contracts, index):
+        """
+        Given the list of valid contracts for a given root_symbol,
+        return the contract at the given index.
+        """
+        try:
+            return contracts[index]
+        except IndexError:
+            return None
+
+    def lookup_future(self, root_symbol, as_of_date, contract_num=None):
+        """ Find a specific futures contract or a list of valid
+        contracts for a type of future.
+
+        Parameters
+        ----------
+        root_symbol : str
+            Root symbol of the desired future.
+        as_of_date : pd.Timestamp
+            Date at the time of the lookup.
+        contract_num : int or None
+            1 for the primary contract, 2 for the secondary, etc.,
+            relative to as_of_date.
+            None for a list of all valid futures relative to as_of_date.
+        """
+        root_symbol.upper()
+        as_of_date = normalize_date(as_of_date)
+
+        valid_contracts = self._valid_contracts(root_symbol, as_of_date)
+
+        if contract_num is None:
+            return valid_contracts
+        else:
+            # Contract number 1 refers to first/primary, so adjust
+            # to the zero-indexed list
+            contract_index = contract_num - 1
+
+            if valid_contracts and contract_index >= 0:
+                return self._resolve_contracts(valid_contracts, contract_index)
+
     def populate_cache(self):
         """
         Populates the asset cache with all values in the assets
@@ -248,6 +309,7 @@ class AssetFinder(object):
         # Wipe caches before repopulating
         self.cache = {}
         self.sym_cache = {}
+        self.future_cache = {}
         self.identifier_cache = {}
         self.fuzzy_match = {}
 
@@ -255,6 +317,10 @@ class AssetFinder(object):
         for identifier, row in self.metadata_cache.items():
             self._spawn_asset(identifier=identifier, **row)
             counter += 1
+
+        # Pre-sort the future chains, we assume in future lookups
+        # that they're ordered correctly.
+        self._sort_future_chains()
 
     def _spawn_asset(self, identifier, **kwargs):
 
@@ -344,6 +410,8 @@ class AssetFinder(object):
         self.identifier_cache[identifier] = asset
         if asset.symbol is not '':
             self.sym_cache.setdefault(asset.symbol, []).append(asset)
+        if isinstance(asset, Future) and asset.root_symbol is not '':
+            self.future_cache.setdefault(asset.root_symbol, []).append(asset)
 
         return asset
 

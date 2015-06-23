@@ -650,3 +650,45 @@ class AssetFinderTestCase(TestCase):
         finder = AssetFinder(metadata=metadata)
         omh15 = finder.retrieve_asset(0)
         self.assertEqual('OM', omh15.root_symbol)
+
+    def test_lookup_future(self):
+        metadata = {
+            2: {
+                'symbol': 'ADN15',
+                'root_symbol': 'AD',
+                'asset_type': 'future',
+                'expiration_date': pd.Timestamp('2015-06-15', tz='UTC')
+            },
+            1: {
+                'symbol': 'ADV15',
+                'root_symbol': 'AD',
+                'asset_type': 'future',
+                'expiration_date': pd.Timestamp('2015-09-14', tz='UTC')
+            },
+            0: {
+                'symbol': 'ADF16',
+                'root_symbol': 'AD',
+                'asset_type': 'future',
+                'expiration_date': pd.Timestamp('2015-12-14', tz='UTC')
+            },
+
+        }
+
+        finder = AssetFinder(metadata=metadata)
+        dt = pd.Timestamp('2015-06-19', tz='UTC')
+
+        primary = finder.lookup_future('AD', dt, contract_num=1)
+        self.assertEqual(primary.sid, 1)
+
+        secondary = finder.lookup_future('AD', dt, contract_num=2)
+        self.assertEqual(secondary.sid, 0)
+
+        ad_contracts = finder.lookup_future('AD', dt)
+        self.assertEqual(len(ad_contracts), 2)
+        self.assertEqual(ad_contracts[0].sid, 1)
+        self.assertEqual(ad_contracts[1].sid, 0)
+
+        self.assertIsNone(finder.lookup_future('AD', dt, contract_num=0))
+        self.assertIsNone(finder.lookup_future('AD', dt, contract_num=-10))
+        self.assertIsNone(finder.lookup_future('AD', dt, contract_num=10))
+        self.assertIsNone(finder.lookup_future('CL', dt, contract_num=1))
